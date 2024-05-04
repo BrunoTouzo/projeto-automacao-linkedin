@@ -11,6 +11,7 @@ Processos / passos:
 
 Tecnologias utilizadas:
 - Python
+- time
 - Selenium
 - Pandas
 
