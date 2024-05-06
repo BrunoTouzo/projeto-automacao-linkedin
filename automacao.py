@@ -104,7 +104,17 @@ def Main():
         print(f"vaga {i} adicionado!")
 
     ## passo 3: retornar vagas e armazená-las
-    for vaga in lista_vagas:
+    mostrarVagas(lista_vagas)
+
+    
+    ## passo 4: salvar informações em um arquivo xlsx
+
+
+
+
+## outras funções
+def mostrarVagas(lista:list):
+    for elemento in lista:
         print("~~"*10)
         print(f'nome_vaga = {vaga["nome_vaga"]}')
         print(f'nome_empresa_vaga = {vaga["nome_empresa_vaga"]}')
@@ -116,10 +126,6 @@ def Main():
         print(f'tipo_emprego_vaga = {vaga["tipo_emprego_vaga"]}')
         print(f'Funcao_vaga = {vaga["Funcao_vaga"]}')
         print(f'setor_vaga = {vaga["setor_vaga"]}')
-
-    
-    ## passo 4: salvar informações em um arquivo xlsx
-
 
 
 ## chamando a main
