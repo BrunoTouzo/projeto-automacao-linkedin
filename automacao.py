@@ -54,12 +54,12 @@ def Main():
         ]
     
     # obtendo informações das primeiras 20 vagas encontradas
-    for i in range(1, limite):
+    for i in range(1, limite+1):
         print(f"i: {i}")
 
         while len(nv.find_elements(By.XPATH, f'//*[@id="main-content"]/section[2]/ul/li[{i}]'))<1: # esperando carregar o card esquerdo
             print("esperando card esquerdo...")
-            sleep(0.5)
+            sleep(0.2)
         
         nv.find_element( By.XPATH, f'//*[@id="main-content"]/section[2]/ul/li[{i}]').click() # clicando no card da vaga
         sleep(1)
@@ -138,9 +138,9 @@ def Main():
     
     # criando para uma planilha excel
     #with open(f'/busca_empregos_{date.today}.xlsx', 'w'):
-    with pd.ExcelWriter("planilha.xlsx") as writer:
-        t = localtime()
-        tabela.to_excel(writer,sheet_name=f'busca_{date.today()}-{t.tm_hour}_{t.tm_min}_{t.tm_sec}')
+    t = localtime()
+    with pd.ExcelWriter(f'planilha-{date.today()}-{t.tm_hour}_{t.tm_min}_{t.tm_sec}.xlsx') as writer:
+        tabela.to_excel(writer,sheet_name='vagas')
 
 
 ## chamando a main
