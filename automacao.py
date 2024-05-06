@@ -9,7 +9,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 
 # time
-from time import sleep
+from time import sleep, localtime
+from datetime import date
 
 ##
 def Main():
@@ -22,13 +23,12 @@ def Main():
     }
     conjunto_filtros["vagas"] = input("cargo desejado:").strip()
     conjunto_filtros["localidade"] = input("Localidade desejada:").strip()
+    limite:int = int(input("quantidade de vagas:").strip())
 
     # instanciando o navegador
     servico = Service(ChromeDriverManager().install()) # lidando com versão do webdriver automaticamente
     nv = webdriver.Chrome(service=servico) # instanciando o navegador através do serviço
     nv.set_window_size(1280,720)
-
-    
 
     ## passo 2: procurar vagas compatíveis
 
@@ -43,7 +43,7 @@ def Main():
             '/html/body/div[1]/div/section/div[2]/section/div/div[1]/div/a/h2', # nome da vaga
             '/html/body/div[1]/div/section/div[2]/section/div/div[1]/div/h4/div[1]/span[1]/a', # nome da empresa
             '/html/body/div[1]/div/section/div[2]/section/div/div[1]/div/h4/div[1]/span[2]', # local da vaga
-            '/html/body/div[1]/div/section/div[2]/section/div/div[1]/div/h4/div[2]/span[1]', # data de postagwm da vaga
+            '/html/body/div[1]/div/section/div[2]/section/div/div[1]/div/h4/div[2]/span[1]', # data de postagem da vaga
             '/html/body/div[1]/div/section/div[2]/section/div/div[1]/div/h4/div[2]/span[2]', # quantidade de aplicações para a vaga
             '/html/body/div[1]/div/section/div[2]/div/section[1]/div/div/section/div', # descrição da vaga
             '/html/body/div[1]/div/section/div[2]/div/section[1]/div/ul/li[1]/span', # nível de experiência da vaga
@@ -52,8 +52,9 @@ def Main():
             '/html/body/div[1]/div/section/div[2]/div/section[1]/div/ul/li[4]/span' #  setor de atuação da vaga
 
         ]
+    
     # obtendo informações das primeiras 20 vagas encontradas
-    for i in range(1, 5):
+    for i in range(1, limite):
         print(f"i: {i}")
 
         while len(nv.find_elements(By.XPATH, f'//*[@id="main-content"]/section[2]/ul/li[{i}]'))<1: # esperando carregar o card esquerdo
@@ -65,7 +66,7 @@ def Main():
         # obtendo informações da vaga e salvando em uma lista
         cont:int=0
         while len(nv.find_elements(By.XPATH, f'/html/body/div[1]/div/section/div[2]/section/div/div[1]/div/a/h2'))<1: #esperando o painel direito carregar
-            print("esperando nome da vaga...")
+            # pequeno sistema de aguardo de carregamento de página
             cont+=1
             if cont >10 and i>1:
                 nv.find_element( By.XPATH, f'//*[@id="main-content"]/section[2]/ul/li[{i-1}]').click() # clicando no card da vaga
@@ -87,6 +88,8 @@ def Main():
                 cont = 0
             sleep(0.5)
 
+        ## passo 3: retornar vagas e armazená-las
+        # guardando informações de uma vaga em um dicionário
         d1:dict = {}
         
         d1["nome_vaga"] = nv.find_element(By.XPATH, lista_elementos[0]).text.strip()
@@ -101,31 +104,43 @@ def Main():
         d1["setor_vaga"] = nv.find_element(By.XPATH, lista_elementos[9]).text.strip()
         
         lista_vagas.append(d1) # adicionando o elemento à lista
-        print(f"vaga {i} adicionado!")
-
-    ## passo 3: retornar vagas e armazená-las
-    mostrarVagas(lista_vagas)
 
     
     ## passo 4: salvar informações em um arquivo xlsx
+    # criando um dataframe
+    tabela = pd.DataFrame({
+        "nome_vaga":[],
+        "nome_empresa_vaga":[],
+        "Local_vaga":[],
+        "data_postagem_vaga":[],
+        "descricao_vaga":[],
+        "nvl_experiencia_vaga":[],
+        "tipo_emprego_vaga":[],
+        "Funcao_vaga":[],
+        "setor_vaga":[]
+    })
+    
+    # adicionando linhas
+    for i in range(len(lista_vagas)):
+        d:dict = lista_vagas[i]
+        tabela.loc[i] = [
+            d["nome_vaga"],
+            d["nome_empresa_vaga"],
+            d["Local_vaga"],
+            d["data_postagem_vaga"],
+            d["descricao_vaga"],
+            d["nvl_experiencia_vaga"],
+            d["tipo_emprego_vaga"],
+            d["Funcao_vaga"],
+            d["setor_vaga"]
+        ]
 
-
-
-
-## outras funções
-def mostrarVagas(lista:list):
-    for elemento in lista:
-        print("~~"*10)
-        print(f'nome_vaga = {vaga["nome_vaga"]}')
-        print(f'nome_empresa_vaga = {vaga["nome_empresa_vaga"]}')
-        print(f'Local_vaga = {vaga["Local_vaga"]}')
-        print(f'data_postagem_vaga = {vaga["data_postagem_vaga"]}')
-        #print(f'qtd_aplicacoes_vaga = {vaga["qtd_aplicacoes_vaga"]}')
-        print(f'descricao_vaga = {vaga["descricao_vaga"]}')
-        print(f'nvl_experiencia_vaga = {vaga["nvl_experiencia_vaga"]}')
-        print(f'tipo_emprego_vaga = {vaga["tipo_emprego_vaga"]}')
-        print(f'Funcao_vaga = {vaga["Funcao_vaga"]}')
-        print(f'setor_vaga = {vaga["setor_vaga"]}')
+    
+    # criando para uma planilha excel
+    #with open(f'/busca_empregos_{date.today}.xlsx', 'w'):
+    with pd.ExcelWriter("planilha.xlsx") as writer:
+        t = localtime()
+        tabela.to_excel(writer,sheet_name=f'busca_{date.today()}-{t.tm_hour}_{t.tm_min}_{t.tm_sec}')
 
 
 ## chamando a main
